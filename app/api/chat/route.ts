@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         parts: [
           pdfPart,
           {
-            text: userMessage || "この資料を読んで、あなたの視点で質問をしてください。",
+            text: userMessage || "この資料を読んで研究テーマとゴールを把握し、あなたの視点で進捗について質問をしてください。",
           },
         ],
       });

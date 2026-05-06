@@ -44,7 +44,7 @@ export default function Home() {
 
     if (!input.trim() && messages.length > 0) return;
 
-    const userMsg = input.trim() || "この資料を読んで、あなたの視点で質問をしてください。";
+    const userMsg = input.trim() || "この資料を読んで研究テーマとゴールを把握し、あなたの視点で進捗について質問をしてください。";
     const newMessages = [...messages, { role: "user", content: userMsg }];
     setMessages(newMessages);
     setInput("");
@@ -128,8 +128,15 @@ export default function Home() {
                 {Object.values(PERSONAS).map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => setPersonaId(p.id as PersonaId)}
-                    className={`w-full p-3 rounded-xl text-left text-sm transition-all ${personaId === p.id ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-200" : "bg-white hover:bg-emerald-50 border border-emerald-100"}`}
+                    onClick={() => {
+                      setPersonaId(p.id as PersonaId);
+                      setMessages([]);
+                    }}
+                    className={`w-full p-3 rounded-xl text-left text-sm transition-all ${
+                      personaId === p.id 
+                      ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-200" 
+                      : "bg-white hover:bg-emerald-50 border border-emerald-100"}`
+                    }
                   >
                     <div className="font-bold">{p.name}</div>
                     <div className={`text-xs ${personaId === p.id ? "text-emerald-100" : "text-slate-500"}`}>{p.role}</div>
