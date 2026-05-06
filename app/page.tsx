@@ -25,13 +25,12 @@ export default function Home() {
       return;
     }
 
-    // 上限を 5MB (5 * 1024 * 1024 バイト) に設定
-    const MAX_FILE_SIZE_MB = 5;
+    const MAX_FILE_SIZE_MB = 6;
     const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
       const actualSize = (selectedFile.size / (1024 * 1024)).toFixed(1);
-      setErrorMessage(`ファイルサイズが大きすぎます。${MAX_FILE_SIZE_MB}MB以下のPDFを選択してください（現在: ${actualSize}MB）。`);
+      setErrorMessage(`ファイルサイズが大きすぎます。${MAX_FILE_SIZE_MB}MB以下のPDFを選択してください。（現在: ${actualSize}MB）`);
       e.target.value = "";
       setFile(null);
       return;
@@ -40,12 +39,12 @@ export default function Home() {
     setFile(selectedFile);
   };
 
-  // 送信ハンドラ
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendMessage = async () => {
     if (!file || isLoading) return;
 
-    const userMsg = input || "この資料を読んで、あなたの視点で質問をしてください。";
+    if (!input.trim() && messages.length > 0) return;
+
+    const userMsg = input.trim() || "この資料を読んで、あなたの視点で質問をしてください。";
     const newMessages = [...messages, { role: "user", content: userMsg }];
     setMessages(newMessages);
     setInput("");
@@ -55,7 +54,6 @@ export default function Home() {
     formData.append("file", file);
     formData.append("personaId", personaId);
     formData.append("message", userMsg);
-    // 簡易的な履歴管理（必要に応じて拡張）
     formData.append("history", JSON.stringify(messages.map(m => ({
       role: m.role === "user" ? "user" : "model",
       parts: [{ text: m.content }]
@@ -72,9 +70,22 @@ export default function Home() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.nativeEvent.isComposing) return;
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#f8fdf8] text-slate-800 font-sans">
-      {/* 背景の植物風装飾 */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-5 overflow-hidden z-0">
         <Leaf className="absolute -top-10 -left-10 w-64 h-64 rotate-45" />
         <Leaf className="absolute bottom-20 -right-20 w-80 h-80 -rotate-12" />
@@ -83,7 +94,12 @@ export default function Home() {
       <div className="relative z-10 max-w-4xl mx-auto p-6 md:p-12">
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-emerald-900 mb-2 flex items-center justify-center gap-3">
-            <ShieldAlert className="w-10 h-10" /> Research Defense AI
+            <img 
+              src="/icon.png"
+              alt="Logo"
+              className="w-25 h-25 object-contain"
+            />
+            ちゃうちゃう君
           </h1>
           <p className="text-emerald-700">ちゃうちゃう君へようこそ。資料を提出して、チェックを受けましょう。</p>
         </header>
@@ -99,7 +115,7 @@ export default function Home() {
               ) : file ? (
                 <p className="mt-2 text-xs text-emerald-600 font-medium">選択中: {file.name}</p>
               ) : (
-                <p className="mt-2 text-xs text-slate-400">5MB以下のPDFを選択してください</p>
+                <p className="mt-2 text-xs text-slate-400">6MB以下のPDFを選択してください</p>
               )}
             </section>
 
@@ -151,19 +167,20 @@ export default function Home() {
               <div ref={scrollRef} />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 bg-white/80 border-t border-emerald-100 flex gap-2">
-              <input
-                type="text"
+            <form onSubmit={handleSubmit} className="p-4 bg-white/80 border-t border-emerald-100 flex items-end gap-2">
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={file ? "回答や質問を入力..." : "まずPDFを選択してください"}
+                onKeyDown={handleKeyDown}
+                placeholder={file ? "回答を入力... (Shift+Enterで改行)" : "まずPDFを選択してください"}
                 disabled={!file || isLoading}
-                className="flex-1 bg-emerald-50/50 border-none rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                rows={1}
+                className="flex-1 bg-emerald-50/50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none min-h-11 max-h-32 overflow-y-auto"
               />
               <button
                 type="submit"
                 disabled={!file || isLoading}
-                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white p-2 rounded-xl transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white p-3 rounded-xl transition-colors mb-0.5"
               >
                 <Send className="w-5 h-5" />
               </button>
