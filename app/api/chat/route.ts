@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
             {
               text:
                 userMessage ||
-                "この論文を読んで，あなたの視点で鋭い質問を 1 つ投げかけてください．",
+                "この資料を読んで，あなたの視点で鋭い質問を 1 つ投げかけてください．",
             },
           ],
         },

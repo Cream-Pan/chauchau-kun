@@ -9,13 +9,35 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [personaId, setPersonaId] = useState<PersonaId>("i_sensei");
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // ファイル選択ハンドラ
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) setFile(e.target.files[0]);
+    const selectedFile = e.target.files?.[0];
+    
+    setErrorMessage("");
+    
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+
+    // 上限を 5MB (5 * 1024 * 1024 バイト) に設定
+    const MAX_FILE_SIZE_MB = 5;
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      const actualSize = (selectedFile.size / (1024 * 1024)).toFixed(1);
+      setErrorMessage(`ファイルサイズが大きすぎます。${MAX_FILE_SIZE_MB}MB以下のPDFを選択してください（現在: ${actualSize}MB）。`);
+      e.target.value = "";
+      setFile(null);
+      return;
+    }
+
+    setFile(selectedFile);
   };
 
   // 送信ハンドラ
@@ -63,7 +85,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-emerald-900 mb-2 flex items-center justify-center gap-3">
             <ShieldAlert className="w-10 h-10" /> Research Defense AI
           </h1>
-          <p className="text-emerald-700">研究室のミーティングへようこそ。資料を提出して、教授のチェックを受けましょう。</p>
+          <p className="text-emerald-700">ちゃうちゃう君へようこそ。資料を提出して、チェックを受けましょう。</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -72,7 +94,13 @@ export default function Home() {
             <section className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-emerald-100">
               <h2 className="font-bold mb-4 flex items-center gap-2"><Upload className="w-4 h-4" /> 資料アップロード</h2>
               <input type="file" accept=".pdf" onChange={handleFileChange} className="text-sm block w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-              {file && <p className="mt-2 text-xs text-emerald-600 font-medium">選択中: {file.name}</p>}
+              {errorMessage ? (
+                <p className="mt-2 text-xs text-red-500 font-medium">{errorMessage}</p>
+              ) : file ? (
+                <p className="mt-2 text-xs text-emerald-600 font-medium">選択中: {file.name}</p>
+              ) : (
+                <p className="mt-2 text-xs text-slate-400">5MB以下のPDFを選択してください</p>
+              )}
             </section>
 
             <section className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-emerald-100">
