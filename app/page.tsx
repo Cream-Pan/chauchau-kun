@@ -62,9 +62,12 @@ export default function Home() {
     try {
       const res = await fetch("/api/chat", { method: "POST", body: formData });
       const data = await res.json();
-      setMessages([...newMessages, { role: "assistant", content: data.text }]);
-    } catch (error) {
-      setMessages([...newMessages, { role: "assistant", content: "エラーが発生しました。接続を確認してください。" }]);
+      if (!res.ok) {
+        throw new Error(data.error || "サーバーエラーが発生しました");
+      }
+      setMessages([...newMessages, { role: "assistant", content: data.text || "（返答を生成できませんでした）" }]);
+    } catch (error: any) {
+      setMessages([...newMessages, { role: "assistant", content: `⚠️ エラー: ${error.message}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +175,7 @@ export default function Home() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={file ? "回答を入力... (Shift+Enterで改行)" : "まずPDFを選択してください"}
+                placeholder={file ? "メッセージを入力..." : "まずPDFを選択してください"}
                 disabled={!file || isLoading}
                 rows={1}
                 className="flex-1 bg-emerald-50/50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none min-h-11 max-h-32 overflow-y-auto"
