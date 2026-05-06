@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PERSONAS, PersonaId } from "@/constants/personas";
 import { Upload, Send, Leaf, MessageSquare, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,12 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoading]);
 
   // ファイル選択ハンドラ
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +69,8 @@ export default function Home() {
       const res = await fetch("/api/chat", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "サーバーエラーが発生しました");
+        const msg = data.error?.message || data.error || "エラーが発生しました";
+        throw new Error(msg.includes("quota") ? "1日の利用制限を超えました。明日また試してください。" : msg);
       }
       setMessages([...newMessages, { role: "assistant", content: data.text || "（返答を生成できませんでした）" }]);
     } catch (error: any) {
